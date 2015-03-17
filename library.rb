@@ -30,10 +30,15 @@ Classes
 =end
 
 require 'set'
+require 'singleton'
+
+#method for working with relative filepaths came from 
 
 
 #CALENDER CLASS
+
 class Calender
+	include Singleton
 	
 	def initialize()
 		@date = 0
@@ -136,7 +141,23 @@ class Member
 	
 end
 
-
 class Library
-
+	include Singleton
+	
+	
+	def initialize()
+	  @nextid = 1
+	  @collection = Hash.new
+		File.foreach("collection.txt") do |line|
+			values = line.split(",")			
+			@collection[@nextid] = Book.new(@nextid, values[0], values[1])
+			@nextid += 1
+		end
+	end
+	
+	def get_books()
+		@collection
+	end
+	
 end
+	
