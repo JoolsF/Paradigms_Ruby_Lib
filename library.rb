@@ -90,7 +90,6 @@ class Book
 	end
 	
 	#to_s override
-	#@id converted to string has String can't be coerced to Fixnum
 	def to_s()
 	#TO DO Since this is overriding to_s do I need equiv of Java annotations?
 		@id.to_s + ": " + @title + " by " + @author
@@ -113,7 +112,7 @@ class Member
 		@books_on_loan = Set.new # http://ruby-doc.org/stdlib-2.2.1/libdoc/set/rdoc/Set.html
 	end
 	
-	def getName()
+	def get_name()
 	 @name
 	end
 	
@@ -154,10 +153,10 @@ class Library
 	  @member_being_served = nil
 	  
 	  #Initialises the libraries collection from collection.txt
-	  @collection = Hash.new
+	  @book_collection = Hash.new
 	  File.foreach("collection.txt") do |line|
 		values = line.split(",")
-		@collection[@nextid] = Book.new(@nextid, values[0], values[1])
+		@book_collection[@nextid] = Book.new(@nextid, values[0], values[1])
 		@nextid += 1
 		end
 		"Library system online"
@@ -181,28 +180,53 @@ class Library
 	
 	def issue_card(name_of_member)
 		#TO DO throw library is not open exception if not open	
-		if(@collection[name_of_member] == nil)
-			@collection[name_of_member] = Member.new(name_of_member, self)
+		if(@members[name_of_member] == nil)
+			@members[name_of_member] = Member.new(name_of_member, self)
 			"Library card issued to " + name_of_member
 		else
 			name_of_member + " already has a library card"
 		end	
 	end
 	
+	
 	def serve(name_of_member)
 		#T0 DO library not open exception
 		#TO DO quite serving other member if any
 		
-		if(@collection[name_of_member] == nil)
+		if(@members[name_of_member] == nil)
 			name_of_member + " does not have a library card."
 		else
-			@member_being_served = @collection[name_of_member]
+			@member_being_served = @members[name_of_member]
 			"Now serving " + name_of_member
 		end	
 	
 	end
 	
+	#find_overdue_books()
 	
+	#check_in(*book_numbers)  # * = 1..n of book numbers
 	
+	#search(string)
 	
-end
+	def check_out(*book_ids)
+		#TO DO throw exceptions..
+		# lib not open
+		# no member currently being served
+		# library doesn't have book id
+		
+		for id in book_ids
+			book = @book_collection[id]
+			if (book == nil) 
+				puts "EH?"
+			end
+			book.check_out(@calendar.get_date() + 7)
+			@member_being_served.check_out(book)
+			@book_collection.delete(id)
+		end
+		
+		book_ids.size.to_s + " books have been successfully checked out to " + @member_being_served.get_name()
+	end
+	
+
+ 
+ end	

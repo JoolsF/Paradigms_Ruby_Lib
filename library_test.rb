@@ -29,6 +29,10 @@ puts lib.issue_card("Julian Fenner")
 puts lib.issue_card("Julian Fenner")
 puts lib.serve("Julian Fenner")
 
+
+puts lib.check_out(1,2,3)
+
+puts lib.check_out(1,2,3)
 #puts lib.get_member("Julian Fenner")
 
 #puts l.open()
