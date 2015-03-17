@@ -1,8 +1,8 @@
 require_relative 'library.rb'
 
 
-#puts Calender.instance
-#puts Calender.instance.get_date()
+#puts Calendar.instance
+#puts Calendar.instance.get_date()
 
 
 
@@ -15,12 +15,20 @@ b = Book.new(123, "The Road", "Cormac McCarthy")
 
 
 
-m = Member.new(1,2)
+#m = Member.new(1,2)
 #puts m.get_books.length
-m.check_out(b)
+#m.check_out(b)
 #puts m.get_books.length
 
 
 #puts Library.instance
 
-puts Library.instance.get_books()
+puts lib = Library.instance
+	
+puts lib.issue_card("Julian Fenner")
+puts lib.issue_card("Julian Fenner")
+puts lib.serve("Julian Fenner")
+
+#puts lib.get_member("Julian Fenner")
+
+#puts l.open()

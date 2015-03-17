@@ -12,7 +12,7 @@ Rules
 	books due 7 days after
 	
 Classes
-	Calender - track time as an int not using Time class
+	Calendar - track time as an int not using Time class
 	Books  - contains book info and due date
 	Member - is a customer of the library
 			 must have lib card to check out books
@@ -23,7 +23,7 @@ Classes
 			  
 			  
 			  Collection of books from collection.txt stored as Tuples (title,author)
-			  Calender obj
+			  Calendar obj
 			  Empty dictionary of members (key -> val) -= (membername -> Member)
 			  Lib open closed boolean flag
 			  Current member (one being served)
@@ -35,9 +35,9 @@ require 'singleton'
 #method for working with relative filepaths came from 
 
 
-#CALENDER CLASS
+#CALENDAR CLASS
 
-class Calender
+class Calendar
 	include Singleton
 	
 	def initialize()
@@ -141,23 +141,68 @@ class Member
 	
 end
 
+
 class Library
 	include Singleton
 	
 	
 	def initialize()
 	  @nextid = 1
+	  @calendar = Calendar.instance
+	  @members = Hash.new # The keys will be the names of members and the values will be the corresponding Member objects.
+	  @libraryopen = false
+	  @member_being_served = nil
+	  
+	  #Initialises the libraries collection from collection.txt
 	  @collection = Hash.new
-		File.foreach("collection.txt") do |line|
-			values = line.split(",")			
-			@collection[@nextid] = Book.new(@nextid, values[0], values[1])
-			@nextid += 1
+	  File.foreach("collection.txt") do |line|
+		values = line.split(",")
+		@collection[@nextid] = Book.new(@nextid, values[0], values[1])
+		@nextid += 1
+		end
+		"Library system online"
+	end
+	
+	
+	def open()
+		if(@libraryopen)
+			#TO DO Handle this exception http://rubylearning.com/satishtalim/ruby_exceptions.html
+			raise Exception.new("The library is already open!"	)
+		else
+			@libraryopen = true
+			@calendar.advance()
+			"Today is day " + @calendar.get_date().to_s
 		end
 	end
 	
-	def get_books()
-		@collection
+	
+	# def find_all_overdue_books()
+	
+	
+	def issue_card(name_of_member)
+		#TO DO throw library is not open exception if not open	
+		if(@collection[name_of_member] == nil)
+			@collection[name_of_member] = Member.new(name_of_member, self)
+			"Library card issued to " + name_of_member
+		else
+			name_of_member + " already has a library card"
+		end	
 	end
 	
-end
+	def serve(name_of_member)
+		#T0 DO library not open exception
+		#TO DO quite serving other member if any
+		
+		if(@collection[name_of_member] == nil)
+			name_of_member + " does not have a library card."
+		else
+			@member_being_served = @collection[name_of_member]
+			"Now serving " + name_of_member
+		end	
 	
+	end
+	
+	
+	
+	
+end
