@@ -31,6 +31,7 @@ Classes
 
 require 'set'
 require 'singleton'
+require 'stringio'
 
 #method for working with relative filepaths came from 
 
@@ -123,7 +124,7 @@ class Member
 	end
 	
 	def give_back(book)
-		@book_set.delete(book)
+		@books_on_loan.delete(book)
 	end
 	
 	def return(book)
@@ -163,6 +164,8 @@ class Library
 	end
 	
 	
+	
+	
 	def open()
 		if(@libraryopen)
 			#TO DO Handle this exception http://rubylearning.com/satishtalim/ruby_exceptions.html
@@ -175,7 +178,29 @@ class Library
 	end
 	
 	
-	# def find_all_overdue_books()
+	
+	
+	def find_all_overdue_books()
+		s = StringIO.new
+
+		@members.each do |name, member|
+			overdue_books = StringIO.new
+			s << member.get_name + "\n"
+			
+			member.get_books.each do |book|
+				if(@calendar.get_date > book.get_due_date)
+					overdue_books << "Overdue book " + book.to_s
+				end
+			end
+				
+			overdue_books.size == 0 ? s << "No books are overdue" + "\n" + "\n"	 : s << overdue_books.string + "\n" +"\n"
+		end
+		
+		s.string
+		
+	end
+	
+	
 	
 	
 	def issue_card(name_of_member)
@@ -187,6 +212,8 @@ class Library
 			name_of_member + " already has a library card"
 		end	
 	end
+	
+	
 	
 	
 	def serve(name_of_member)
@@ -202,9 +229,25 @@ class Library
 	
 	end
 	
-	#find_overdue_books()
 	
-	#check_in(*book_numbers)  # * = 1..n of book numbers
+	
+	
+	
+	def find_overdue_books()
+		overdue_books = StringIO.new
+		
+		@member_being_served.get_books.each do |book|
+			if(@calendar.get_date > book.get_due_date)
+				overdue_books << book.to_s
+			end
+		end
+		overdue_books.size == 0 ? "None" : overdue_books.string
+	
+	end
+	
+	
+	
+	
 	
 	#search(string)
 	
@@ -216,9 +259,8 @@ class Library
 		
 		for id in book_ids
 			book = @book_collection[id]
-			if (book == nil) 
-				puts "EH?"
-			end
+			#TO DOcheck if exists
+			
 			book.check_out(@calendar.get_date() + 7)
 			@member_being_served.check_out(book)
 			@book_collection.delete(id)
@@ -227,6 +269,31 @@ class Library
 		book_ids.size.to_s + " books have been successfully checked out to " + @member_being_served.get_name()
 	end
 	
-
- 
+	
+	def check_in(*book_numbers)  
+	#TO DO throw exceptions..
+		# lib not open
+		# no member currently being served
+		# member doesn't have book id
+	
+		for number in book_numbers
+			#books = @member_being_served.get_books()
+			
+			for book in @member_being_served.get_books()
+				#TO DOcheck if exists		
+				if(book.get_id() == number)
+					book.check_in
+					@member_being_served.return(book)
+					@book_collection[number] = book
+				end
+			end
+		end	
+	end
+	
+	
+	def close()
+		# TO DO add exceptions
+		@libraryopen = false
+		"Good Night"
+	end
  end	
