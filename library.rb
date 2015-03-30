@@ -32,6 +32,7 @@ Classes
 require 'set'
 require 'singleton'
 require 'stringio'
+require 'strscan'
 
 #method for working with relative filepaths came from 
 
@@ -60,20 +61,38 @@ end
 
 #BOOK CLASS
 class Book
-	
+	# Instances of class. Idea is to check whether a given a book is a member.  Used to cimplicy "Library" methods such as check_in(*book_numbers)
+	#http://stackoverflow.com/questions/6365638/how-to-get-class-instances-in-ruby
+	@@instance_collector = []
+
 	def initialize(id, title, author)
 		@id = id
-		@title = title 
-		@author = author
+		@title = title.strip
+		@author = author.strip
 		@due_date = nil
+		@@instance_collector << self
 	end
-
+	
+	#Returns book if exists otherwise returns nil
+	def self.get_book(id)
+		for book in @@instance_collector
+			if(id == book.get_id)
+				return book
+			end
+		end
+		nil
+	end
+	
 	def get_id()
 		@id
 	end
 	
 	def get_title()
 		@title
+	end
+	
+	def get_author()
+		@author
 	end
 	
 	def get_due_date()
@@ -93,7 +112,12 @@ class Book
 	#to_s override
 	def to_s()
 	#TO DO Since this is overriding to_s do I need equiv of Java annotations?
-		@id.to_s + ": " + @title + " by " + @author
+		@id.to_s + ": " + @title + " by "  + @author
+	end
+	
+	def to_s_no_id()
+	#TO DO Since this is overriding to_s do I need equiv of Java annotations?
+		@title + " " + @author
 	end
 	
 end
@@ -162,6 +186,7 @@ class Library
 		end
 		"Library system online"
 	end
+	
 	
 	
 	
@@ -247,9 +272,47 @@ class Library
 	
 	
 	
+	def check_in(*book_numbers)  
+	#TO DO throw exceptions..
+		# lib not open
+		# no member currently being served
+		for number in book_numbers
+			#book retrived from Book has this removes need for multiple inner loops and boolean flags.  Removes potential for bugs
+			book = Book.get_book(number) #TO DO - throw exception if doesn't exist
+			if ! (@member_being_served.get_books().member?(book))
+				raise 'member doesnt have book id'
+			end
+			book.check_in
+			@member_being_served.return(book)
+			@book_collection[number] = book	
+		end
+		@member_being_served.get_name + " has returned " + book_numbers.size.to_s	 + " books" 
+	end
+	
+
+	
+	def search(string)	
+		if (string.length < 4)
+			return "Search string must contain at least four characters."
+		end
+		string = string.downcase
+		found_books = StringIO.new
+		found_books_set = Set.new
+		
+		@book_collection.each do |id, book|
+			if (book.get_title.downcase.include? string or book.get_author.downcase.include? string)
+				if !(found_books_set.member?(book.to_s_no_id)) 
+					found_books << book.to_s
+					found_books_set.add(book.to_s_no_id)
+				end
+			end
+		end
+		
+		puts found_books_set.size
+		found_books.size == 0 ? "No books found." : found_books.string
+	end
 	
 	
-	#search(string)
 	
 	def check_out(*book_ids)
 		#TO DO throw exceptions..
@@ -270,25 +333,8 @@ class Library
 	end
 	
 	
-	def check_in(*book_numbers)  
-	#TO DO throw exceptions..
-		# lib not open
-		# no member currently being served
-		# member doesn't have book id
-	
-		for number in book_numbers
-			#books = @member_being_served.get_books()
-			
-			for book in @member_being_served.get_books()
-				#TO DOcheck if exists		
-				if(book.get_id() == number)
-					book.check_in
-					@member_being_served.return(book)
-					@book_collection[number] = book
-				end
-			end
-		end	
-	end
+
+	#def renew(*book_ids)	
 	
 	
 	def close()
@@ -296,4 +342,9 @@ class Library
 		@libraryopen = false
 		"Good Night"
 	end
+	
+	#def quit()
+	
+	
+	
  end	

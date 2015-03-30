@@ -31,12 +31,20 @@ puts lib.issue_card("Linda Florence")
 puts lib.serve("Julian Fenner")
 puts lib.check_out(1,2,3)
 
-lib.check_in(1)
+puts lib.check_in(1,2)
 
 puts lib.serve("Linda Florence")
-puts lib.check_out(1)
+puts lib.check_out(1,2)
 
+puts lib.search('kill')
 
+x = "jools"
+y = "linda"
+z = "jools"
+
+a = [x,y]
+
+puts a.include? (z)
 
 
 #(0..7).each do |i|
