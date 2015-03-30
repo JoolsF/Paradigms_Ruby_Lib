@@ -29,14 +29,14 @@ puts lib.issue_card("Julian Fenner")
 puts lib.issue_card("Linda Florence")
 
 puts lib.serve("Julian Fenner")
-puts lib.check_out(1,2,3)
+puts lib.check_out(1,2,3,4)
 
-puts lib.check_in(1,2)
+puts lib.check_in(1,2,3,4)
 
 puts lib.serve("Linda Florence")
 puts lib.check_out(1,2)
 
-puts lib.search('kill')
+puts lib.search('Kill')
 
 x = "jools"
 y = "linda"
@@ -45,6 +45,8 @@ z = "jools"
 a = [x,y]
 
 puts a.include? (z)
+
+puts lib.renew(1,2,5)
 
 
 #(0..7).each do |i|

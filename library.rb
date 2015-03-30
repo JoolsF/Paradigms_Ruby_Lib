@@ -1,32 +1,5 @@
 =begin
-Library software for librarian
-	issue library cards
-	check books out to members
-	check books back in
-	send overdue notices
-	open / close library
-
-Rules
-	must have lib card to check out books
-	max 3 books at a time
-	books due 7 days after
-	
-Classes
-	Calendar - track time as an int not using Time class
-	Books  - contains book info and due date
-	Member - is a customer of the library
-			 must have lib card to check out books
-			 max 3 books
-	Library - Master class
-			  These methods (other than constructor) will be typed in by librarian therefore params must be strings not numbers. 
-			  Should all return result (to reassure librarian that actions working)
-			  
-			  
-			  Collection of books from collection.txt stored as Tuples (title,author)
-			  Calendar obj
-			  Empty dictionary of members (key -> val) -= (membername -> Member)
-			  Lib open closed boolean flag
-			  Current member (one being served)
+TO DO - Reduce code repetition for exception handling in particular
 =end
 
 require 'set'
@@ -61,28 +34,14 @@ end
 
 #BOOK CLASS
 class Book
-	# Instances of class. Idea is to check whether a given a book is a member.  Used to cimplicy "Library" methods such as check_in(*book_numbers)
-	#http://stackoverflow.com/questions/6365638/how-to-get-class-instances-in-ruby
-	@@instance_collector = []
-
+	
 	def initialize(id, title, author)
 		@id = id
 		@title = title.strip
 		@author = author.strip
 		@due_date = nil
-		@@instance_collector << self
 	end
-	
-	#Returns book if exists otherwise returns nil
-	def self.get_book(id)
-		for book in @@instance_collector
-			if(id == book.get_id)
-				return book
-			end
-		end
-		nil
-	end
-	
+
 	def get_id()
 		@id
 	end
@@ -116,7 +75,6 @@ class Book
 	end
 	
 	def to_s_no_id()
-	#TO DO Since this is overriding to_s do I need equiv of Java annotations?
 		@title + " " + @author
 	end
 	
@@ -158,6 +116,17 @@ class Member
 	def get_books()
 		@books_on_loan
 	end
+	
+	#return true if book with id present else returns nil
+	def get_book(id)
+		for book in @books_on_loan
+			if(book.get_id == id)
+				return book
+			end
+		end
+		nil
+	end
+	
 	
 	#TO IMPLEMENT
 	# Tells this member that he/she has overdue books. (What the method actually does is just print out this member's name along with the notice.)
@@ -266,7 +235,7 @@ class Library
 				overdue_books << book.to_s
 			end
 		end
-		overdue_books.size == 0 ? "None" : overdue_books.string
+		overdue_sbooks.size == 0 ? "None" : overdue_books.string
 	
 	end
 	
@@ -277,14 +246,14 @@ class Library
 		# lib not open
 		# no member currently being served
 		for number in book_numbers
-			#book retrived from Book has this removes need for multiple inner loops and boolean flags.  Removes potential for bugs
-			book = Book.get_book(number) #TO DO - throw exception if doesn't exist
-			if ! (@member_being_served.get_books().member?(book))
-				raise 'member doesnt have book id'
-			end
-			book.check_in
-			@member_being_served.return(book)
-			@book_collection[number] = book	
+			book = @member_being_served.get_book(number)
+			if (book == nil)
+				raise 'member doesnt have book id: ' + number.to_s
+			else	
+				book.check_in
+				@member_being_served.return(book)
+				@book_collection[number] = book	
+			end	
 		end
 		@member_being_served.get_name + " has returned " + book_numbers.size.to_s	 + " books" 
 	end
@@ -334,8 +303,20 @@ class Library
 	
 	
 
-	#def renew(*book_ids)	
-	
+	def renew(*book_ids)	
+		#TO DO throw exceptions..
+		# lib not open
+		# no member currently being served
+		for id in book_ids
+			book = @member_being_served.get_book(id)
+			if (book == nil)
+				raise 'member doesnt have book id: ' + id.to_s
+			else	
+				book.check_out(book.get_due_date() + 7)
+			end	
+		end
+		book_ids.size.to_s + " books have been renewed for " + @member_being_served.get_name()
+	end		
 	
 	def close()
 		# TO DO add exceptions
