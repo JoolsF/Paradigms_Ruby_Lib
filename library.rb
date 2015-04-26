@@ -1,17 +1,11 @@
-=begin
-TO DO - Reduce code repetition for exception handling in particular
-=end
-
 require 'set'
 require 'singleton'
 require 'stringio'
 require 'strscan'
 
-#method for working with relative filepaths came from 
 
 
 #CALENDAR CLASS
-
 class Calendar
 	include Singleton
 	
@@ -25,6 +19,10 @@ class Calendar
 	
 	def advance()
 		@date += 1	
+	end
+	
+	def self.reset
+		@singleton__instance__ = nil
 	end
 	
 end
@@ -59,18 +57,16 @@ class Book
 	end
 
 	def check_out(due_date) 
-	# TO DO This shouldnt return anything, is this possible in ruby?
 		@due_date = due_date
 	end
 	
 	def check_in()
-	#TO DO Ditto check_out comment
+	
 		@due_date = nil
 	end
 	
 	#to_s override
 	def to_s()
-	#TO DO Since this is overriding to_s do I need equiv of Java annotations?
 		@id.to_s + ": " + @title + " by "  + @author
 	end
 	
@@ -87,9 +83,7 @@ end
 #Member class
 class Member
 	
-	#TO DO - do we want to raise type errors or will we have to do for everything?
 	def initialize(name, library)
-		#raise TypeError unless library.is_a? Library
 		@name = name
 		@library = library
 		@books_on_loan = Set.new # http://ruby-doc.org/stdlib-2.2.1/libdoc/set/rdoc/Set.html
@@ -100,7 +94,6 @@ class Member
 	end
 	
 	def check_out(book)
-		#raise TypeError unless book.is_a? Book
 		@books_on_loan.add(book)
 		
 	end
@@ -117,7 +110,6 @@ class Member
 		@books_on_loan
 	end
 	
-	#return true if book with id present else returns nil
 	def get_book(id)
 		for book in @books_on_loan
 			if(book.get_id == id)
@@ -128,16 +120,12 @@ class Member
 	end
 	
 	
-	#TO IMPLEMENT
-	# Tells this member that he/she has overdue books. (What the method actually does is just print out this member's name along with the notice.)
-	#send_overdue_notice(notice)
-	
 end
 
 
 class Library
 	include Singleton
-	
+	attr_reader :nextid, :calendar, :libraryopen
 	
 	def initialize()
 	  @nextid = 1
@@ -157,24 +145,35 @@ class Library
 	end
 	
 	
-	
-	
-	
-	def open()
-		if(@libraryopen)
-			#TO DO Handle this exception http://rubylearning.com/satishtalim/ruby_exceptions.html
-			raise Exception.new("The library is already open!"	)
-		else
-			@libraryopen = true
-			@calendar.advance()
-			"Today is day " + @calendar.get_date().to_s
-		end
+	def self.reset
+		@singleton__instance__ = nil
 	end
 	
 	
+	#EXCEPTIONS
+	def check_if_lib_open()
+		if(@libraryopen)
+			raise Exception.new("The library is already open!"	)
+		end
+	end
 	
+	def check_if_noone_being_served()
+		if(@member_being_served == nil)
+			raise Exception.new("No member is currently being served.")
+		end
+	end
+	
+	def open()
+		check_if_lib_open()
+			@libraryopen = true
+			@calendar.advance()
+			"Today is day " + @calendar.get_date().to_s
+	end
 	
 	def find_all_overdue_books()
+		check_if_lib_open()
+		check_if_noone_being_served()
+		
 		s = StringIO.new
 
 		@members.each do |name, member|
@@ -198,7 +197,7 @@ class Library
 	
 	
 	def issue_card(name_of_member)
-		#TO DO throw library is not open exception if not open	
+		check_if_lib_open()	
 		if(@members[name_of_member] == nil)
 			@members[name_of_member] = Member.new(name_of_member, self)
 			"Library card issued to " + name_of_member
@@ -211,8 +210,7 @@ class Library
 	
 	
 	def serve(name_of_member)
-		#T0 DO library not open exception
-		#TO DO quite serving other member if any
+		check_if_lib_open()	
 		
 		if(@members[name_of_member] == nil)
 			name_of_member + " does not have a library card."
@@ -228,6 +226,9 @@ class Library
 	
 	
 	def find_overdue_books()
+		check_if_lib_open()
+		check_if_noone_being_served()
+		
 		overdue_books = StringIO.new
 		
 		@member_being_served.get_books.each do |book|
@@ -242,13 +243,13 @@ class Library
 	
 	
 	def check_in(*book_numbers)  
-	#TO DO throw exceptions..
-		# lib not open
-		# no member currently being served
+		check_if_lib_open()
+		check_if_noone_being_served()
+		
 		for number in book_numbers
 			book = @member_being_served.get_book(number)
 			if (book == nil)
-				raise 'member doesnt have book id: ' + number.to_s
+				raise Exception.new ("member doesnt have book id:" + number.to_s)
 			else	
 				book.check_in
 				@member_being_served.return(book)
@@ -284,14 +285,15 @@ class Library
 	
 	
 	def check_out(*book_ids)
-		#TO DO throw exceptions..
-		# lib not open
-		# no member currently being served
-		# library doesn't have book id
+		check_if_lib_open()
+		check_if_noone_being_served()
 		
 		for id in book_ids
 			book = @book_collection[id]
-			#TO DOcheck if exists
+			puts book
+			if (book == nil)
+				raise Exception.new("The library does not have book " + id.to_s)
+			end
 			
 			book.check_out(@calendar.get_date() + 7)
 			@member_being_served.check_out(book)
@@ -304,13 +306,13 @@ class Library
 	
 
 	def renew(*book_ids)	
-		#TO DO throw exceptions..
-		# lib not open
-		# no member currently being served
+		check_if_lib_open()
+		check_if_noone_being_served()
+		
 		for id in book_ids
 			book = @member_being_served.get_book(id)
 			if (book == nil)
-				raise 'member doesnt have book id: ' + id.to_s
+				raise Exception.new("The member doesnt have book id: " + id.to_s)
 			else	
 				book.check_out(book.get_due_date() + 7)
 			end	
@@ -319,12 +321,16 @@ class Library
 	end		
 	
 	def close()
-		# TO DO add exceptions
+		if !(@libraryopen)
+			raise Exception.new("The library is not open!"	)
+		end
 		@libraryopen = false
 		"Good Night"
 	end
 	
-	#def quit()
+	def quit()
+		"The library is now closed for renovations"
+	end
 	
 	
 	
